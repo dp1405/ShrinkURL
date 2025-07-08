@@ -1,9 +1,92 @@
+// JWT Token Management
+const JWTManager = {
+    tokenKey: 'shrinkurl_jwt_token',
+    refreshTokenKey: 'shrinkurl_refresh_token',
+    
+    getToken: function() {
+        return localStorage.getItem(this.tokenKey);
+    },
+    
+    setToken: function(token) {
+        localStorage.setItem(this.tokenKey, token);
+    },
+    
+    getRefreshToken: function() {
+        return localStorage.getItem(this.refreshTokenKey);
+    },
+    
+    setRefreshToken: function(refreshToken) {
+        localStorage.setItem(this.refreshTokenKey, refreshToken);
+    },
+    
+    removeTokens: function() {
+        localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem(this.refreshTokenKey);
+    },
+    
+    isTokenExpired: function(token) {
+        if (!token) return true;
+        
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            return payload.exp < currentTime;
+        } catch (e) {
+            return true;
+        }
+    },
+    
+    refreshToken: function() {
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) {
+            return Promise.reject('No refresh token available');
+        }
+        
+        return fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken: refreshToken })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Token refresh failed');
+            }
+            return response.json();
+        })
+        .then(data => {
+            this.setToken(data.accessToken);
+            if (data.refreshToken) {
+                this.setRefreshToken(data.refreshToken);
+            }
+            return data.accessToken;
+        })
+        .catch(error => {
+            this.removeTokens();
+            // Redirect to login if refresh fails
+            window.location.href = '/auth/login';
+            throw error;
+        });
+    }
+};
+
 // Global application object
 const ShrinkURL = {
     init: function() {
         this.bindEvents();
         this.initTooltips();
         this.initScrollEffects();
+        this.checkTokenExpiry();
+    },
+
+    checkTokenExpiry: function() {
+        const token = JWTManager.getToken();
+        if (token && JWTManager.isTokenExpired(token)) {
+            JWTManager.refreshToken().catch(() => {
+                // Token refresh failed, user will be redirected to login
+            });
+        }
     },
 
     bindEvents: function() {
@@ -163,15 +246,25 @@ const ShrinkURL = {
 
         const mergedOptions = { ...defaultOptions, ...options };
         
-        // Add CSRF token if it exists
-        const csrfToken = document.querySelector('meta[name="_csrf"]');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-        
-        if (csrfToken && csrfHeader) {
-            mergedOptions.headers[csrfHeader.content] = csrfToken.content;
+        // Add JWT token if available
+        const token = JWTManager.getToken();
+        if (token && !JWTManager.isTokenExpired(token)) {
+            mergedOptions.headers['Authorization'] = `Bearer ${token}`;
         }
 
         return fetch(url, mergedOptions)
+            .then(response => {
+                if (response.status === 401) {
+                    // Token expired, try to refresh
+                    return JWTManager.refreshToken()
+                        .then(newToken => {
+                            // Retry the request with new token
+                            mergedOptions.headers['Authorization'] = `Bearer ${newToken}`;
+                            return fetch(url, mergedOptions);
+                        });
+                }
+                return response;
+            })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -240,3 +333,41 @@ window.addEventListener('resize', ShrinkURL.debounce(function() {
         navbar.classList.remove('show');
     }
 }, 250));
+
+// Add to main.js
+const AuthManager = {
+    logout: function() {
+        const token = JWTManager.getToken();
+        
+        if (token) {
+            // Call logout endpoint to invalidate token on server
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .finally(() => {
+                // Clear local storage and redirect
+                JWTManager.removeTokens();
+                window.location.href = '/auth/login';
+            });
+        } else {
+            // Just redirect if no token
+            window.location.href = '/auth/login';
+        }
+    }
+};
+
+// Update logout links to use this function
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutLinks = document.querySelectorAll('a[href*="/auth/logout"], button[data-action="logout"]');
+    
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            AuthManager.logout();
+        });
+    });
+});

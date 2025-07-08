@@ -11,6 +11,51 @@ const URLShortener = {
         this.bindElements();
         this.bindEvents();
         this.loadRecentUrls();
+        this.checkAuthentication();
+    },
+
+    checkAuthentication: function() {
+        const token = JWTManager.getToken();
+        if (token && !JWTManager.isTokenExpired(token)) {
+            this.updateUIForAuthenticatedUser();
+        }
+    },
+
+    updateUIForAuthenticatedUser: function() {
+        // Show user-specific features
+        const userFeatures = document.querySelectorAll('.auth-required');
+        userFeatures.forEach(element => {
+            element.style.display = 'block';
+        });
+        
+        // Load user stats
+        this.loadUserStats();
+    },
+
+    loadUserStats: function() {
+        ShrinkURL.makeRequest('/api/user/stats')
+            .then(response => {
+                if (response.success) {
+                    this.updateStatsDisplay(response.data);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load user stats:', error);
+            });
+    },
+
+    updateStatsDisplay: function(stats) {
+        const statsElements = {
+            totalLinks: document.querySelector('[data-stat="totalLinks"]'),
+            totalClicks: document.querySelector('[data-stat="totalClicks"]'),
+            todayClicks: document.querySelector('[data-stat="todayClicks"]')
+        };
+
+        Object.keys(statsElements).forEach(key => {
+            if (statsElements[key] && stats[key] !== undefined) {
+                statsElements[key].textContent = ShrinkURL.formatNumber(stats[key]);
+            }
+        });
     },
 
     bindElements: function() {
