@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>Dashboard - ShrinkURL</title>
+</head>
+<body>
+<main>
+    <div class="container py-5">
+        <div class="dashboard-header">
+            <h1>Welcome, <span th:text="${user.name}">User</span>!</h1>
+        </div>
+        
+        <!-- Subscription Status -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-crown"></i> Your Subscription
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Current Plan:</strong>
+                                    <span class="badge subscription-badge"
+                                          th:classappend="${subscription.plan.name() == 'FREE' ? 'bg-secondary' : 'bg-success'}"
+                                          th:text="${subscription.plan.displayName}">Free</span>
+                                </p>
+                                <p class="mb-2" th:if="${subscription.active}">
+                                    <strong>Status:</strong>
+                                    <span class="badge bg-success">Active</span>
+                                </p>
+                                <p class="mb-0" th:if="${subscription.plan.name() != 'FREE' && subscription.daysRemaining > 0}">
+                                    <strong>Days Remaining:</strong>
+                                    <span th:text="${subscription.daysRemaining}">0</span> days
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <a th:if="${subscription.plan.name() == 'FREE'}" 
+                                   th:href="@{/subscription/plans}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-arrow-up"></i> Upgrade Plan
+                                </a>
+                                <a th:if="${subscription.plan.name() != 'FREE'}" 
+                                   th:href="@{/subscription/cancel}" 
+                                   class="btn btn-outline-danger">
+                                    <i class="fas fa-times"></i> Cancel Subscription
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <i class="fas fa-link text-primary"></i>
+                        <h3>0</h3>
+                        <p class="text-secondary mb-0">Total URLs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <i class="fas fa-mouse-pointer text-success"></i>
+                        <h3>0</h3>
+                        <p class="text-secondary mb-0">Total Clicks</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <i class="fas fa-chart-bar text-warning"></i>
+                        <h3>0%</h3>
+                        <p class="text-secondary mb-0">Average CTR</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent URLs -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clock"></i> Recent URLs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center text-secondary py-5">
+                            No URLs created yet. Start shortening URLs to see them here.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>Cancel Subscription - ShrinkURL</title>
+</head>
+<body>
+<main>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-times-circle"></i> Cancel Subscription
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Before you go...</h5>
+                            <p>We're sorry to see you leave. Here's what will happen if you cancel:</p>
+                            <ul>
+                                <li>You'll retain access to premium features until 
+                                    <strong th:text="${#temporals.format(subscription.endDate, 'MMMM dd, yyyy')}">End date</strong>
+                                </li>
+                                <li>Your account will be downgraded to the Free plan after that</li>
+                                <li>Your URLs and data will be preserved</li>
+                                <li>You can resubscribe anytime</li>
+                            </ul>
+                        </div>
+                        
+                        <form th:action="@{/subscription/cancel}" method="post" th:object="${cancelForm}" 
+                              id="cancel-subscription-form">
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">
+                                    Please tell us why you're cancelling (optional)
+                                </label>
+                                <select class="form-select" id="reason" th:field="*{reason}">
+                                    <option value="">Select a reason...</option>
+                                    <option value="too_expensive">Too expensive</option>
+                                    <option value="not_using">Not using the service enough</option>
+                                    <option value="missing_features">Missing features I need</option>
+                                    <option value="found_alternative">Found a better alternative</option>
+                                    <option value="temporary">Just need a break</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="feedback" class="form-label">
+                                    Additional feedback (optional)
+                                </label>
+                                <textarea class="form-control" id="feedback" rows="3" 
+                                          th:field="*{feedback}" 
+                                          placeholder="Tell us more about your experience..."></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/dashboard}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Keep Subscription
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Confirm Cancellation
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

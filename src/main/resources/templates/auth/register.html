@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>Register - ShrinkURL</title>
+</head>
+<body>
+<main>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </h2>
+                        
+                        <!-- OAuth2 Registration -->
+                        <div class="d-grid gap-2 mb-4">
+                            <a th:href="@{/auth/oauth2/google}" class="btn btn-outline-danger">
+                                <i class="fab fa-google"></i> Sign up with Google
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <span class="text-secondary">OR</span>
+                        </div>
+                        
+                        <!-- Registration Form -->
+                        <form th:action="@{/register}" method="post" th:object="${registerForm}">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="name" 
+                                           th:field="*{name}" th:errorclass="is-invalid" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" 
+                                         th:errors="*{name}">Name error</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" 
+                                           th:field="*{email}" th:errorclass="is-invalid" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                         th:errors="*{email}">Email error</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" 
+                                           th:field="*{password}" th:errorclass="is-invalid" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" 
+                                         th:errors="*{password}">Password error</div>
+                                </div>
+                                <small class="text-secondary d-block mt-1">
+                                    Password must be at least 6 characters with uppercase, lowercase, number, and special character
+                                </small>
+                                <div id="password-strength" class="mt-1"></div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Create Account
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <p>Already have an account? 
+                                <a th:href="@{/login}" class="text-decoration-none">Login here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

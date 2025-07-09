@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>Login - ShrinkURL</title>
+</head>
+<body>
+<main>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </h2>
+                        
+                        <!-- OAuth2 Login -->
+                        <div class="d-grid gap-2 mb-4">
+                            <a th:href="@{/auth/oauth2/google}" class="btn btn-outline-danger">
+                                <i class="fab fa-google"></i> Login with Google
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <span class="text-secondary">OR</span>
+                        </div>
+                        
+                        <!-- Form Login -->
+                        <form th:action="@{/login}" method="post" th:object="${loginForm}">
+                            
+                            <!-- Display validation errors -->
+                            <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                                <ul class="mb-0">
+                                    <li th:each="error : ${#fields.errors('*')}" th:text="${error}"></li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Display success message -->
+                            <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+                            
+                            <!-- Display logout message -->
+                            <div class="alert alert-info" th:if="${param.logout}">
+                                You have been logged out successfully.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" 
+                                        th:field="*{email}" 
+                                        th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                        required autofocus>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" 
+                                        th:field="*{password}"
+                                        th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                                        required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe" 
+                                    th:field="*{rememberMe}">
+                                <label class="form-check-label" for="rememberMe">
+                                    Remember me for 30 days
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <p class="mb-2">Don't have an account? 
+                                <a th:href="@{/register}" class="text-decoration-none">Register here</a>
+                            </p>
+                            <p><a href="#" class="text-decoration-none text-secondary">Forgot password?</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
