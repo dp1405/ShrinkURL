@@ -33,8 +33,6 @@ build/
 .vscode/
 
 ### Maven Wrappers ###
-mvnw
-mvnw.cmd
 .mvn/
 
 ### Configuration Files ###

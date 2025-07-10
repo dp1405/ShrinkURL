@@ -21,14 +21,17 @@ public class SubscriptionUsageDTO {
     private int apiCallLimit;
     private long storageUsed;
     private long storageLimit;
+    private long totalClicks;
+    private long clicksToday;
+    private long clicksThisMonth;
     private double urlUsagePercentage;
     private double apiUsagePercentage;
     private double storageUsagePercentage;
     
     @PostConstruct
     public void calculatePercentages() {
-        this.urlUsagePercentage = (double) urlsCreated / urlLimit * 100;
-        this.apiUsagePercentage = (double) apiCallsToday / apiCallLimit * 100;
-        this.storageUsagePercentage = (double) storageUsed / storageLimit * 100;
+        this.urlUsagePercentage = urlLimit > 0 ? (double) urlsCreated / urlLimit * 100 : 0;
+        this.apiUsagePercentage = apiCallLimit > 0 ? (double) apiCallsToday / apiCallLimit * 100 : 0;
+        this.storageUsagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100 : 0;
     }
 }

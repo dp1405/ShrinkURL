@@ -26,12 +26,6 @@
                                 <h2 th:text="${user.name}">User Name</h2>
                                 <p th:text="${user.email}">user@example.com</p>
                                 <p>
-                                    <span class="badge bg-success" th:if="${user.emailVerified}">
-                                        <i class="fas fa-check"></i> Email Verified
-                                    </span>
-                                    <span class="badge bg-danger" th:unless="${user.emailVerified}">
-                                        <i class="fas fa-exclamation"></i> Email Not Verified
-                                    </span>
                                     <span class="badge bg-info" th:if="${user.subscription}">
                                         <i class="fas fa-crown"></i> 
                                         <span th:text="${user.subscription.plan.displayName}">Free</span> Plan

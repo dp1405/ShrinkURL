@@ -1,6 +1,7 @@
 package org.stir.shrinkurl.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +10,12 @@ import org.springframework.stereotype.Service;
 import org.stir.shrinkurl.dto.SubscriptionUsageDTO;
 import org.stir.shrinkurl.entity.Subscription;
 import org.stir.shrinkurl.entity.User;
+import org.stir.shrinkurl.entity.UrlAnalytics;
 import org.stir.shrinkurl.enums.SubscriptionPlan;
 import org.stir.shrinkurl.enums.SubscriptionStatus;
 import org.stir.shrinkurl.exceptions.TrialAlreadyUsedException;
 import org.stir.shrinkurl.repository.SubscriptionRepository;
+import org.stir.shrinkurl.repository.UrlAnalyticsRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,12 @@ public class SubscriptionService {
     
     @Autowired
     private SubscriptionRepository subscriptionRepository;
+    
+    @Autowired
+    private UrlService urlService;
+    
+    @Autowired
+    private UrlAnalyticsRepository urlAnalyticsRepository;
     
     @Value("${subscription.trial.days:7}")
     private int trialDays;
@@ -144,15 +153,31 @@ public class SubscriptionService {
     public SubscriptionUsageDTO getUsageStats(User user) {
         SubscriptionPlan plan = user.getSubscriptionPlan();
         
+        // Get current counts
+        int urlsCreated = getUrlsCreatedCount(user);
+        int urlLimit = getUrlLimit(plan);
+        int apiCallsToday = getApiCallsToday(user);
+        int apiCallLimit = getApiCallLimit(plan);
+        long storageUsed = getStorageUsed(user);
+        long storageLimit = getStorageLimit(plan);
+        
+        // Get analytics data
+        long totalClicks = urlService.getUserTotalClicks(user.getId());
+        long clicksToday = getClicksToday(user);
+        long clicksThisMonth = getClicksThisMonth(user);
+        
         return SubscriptionUsageDTO.builder()
             .userId(user.getId())
             .plan(plan)
-            .urlsCreated(getUrlsCreatedCount(user)) // To be implemented with URL service
-            .urlLimit(getUrlLimit(plan))
-            .apiCallsToday(getApiCallsToday(user)) // To be implemented with API tracking
-            .apiCallLimit(getApiCallLimit(plan))
-            .storageUsed(getStorageUsed(user)) // To be implemented with storage service
-            .storageLimit(getStorageLimit(plan))
+            .urlsCreated(urlsCreated)
+            .urlLimit(urlLimit)
+            .apiCallsToday(apiCallsToday)
+            .apiCallLimit(apiCallLimit)
+            .storageUsed(storageUsed)
+            .storageLimit(storageLimit)
+            .totalClicks(totalClicks)
+            .clicksToday(clicksToday)
+            .clicksThisMonth(clicksThisMonth)
             .build();
     }
     
@@ -188,17 +213,33 @@ public class SubscriptionService {
     
     // These would need to be implemented based on your business logic
     private int getUrlsCreatedCount(User user) {
-        // Return count from your URL service
-        return 0;
+        return urlService.getUserUrls(user.getId()).size();
     }
     
     private int getApiCallsToday(User user) {
-        // Return API calls from your tracking service
+        // TODO: Implement API call tracking
         return 0;
     }
     
     private long getStorageUsed(User user) {
-        // Return storage used from your storage service
+        // TODO: Implement storage tracking
         return 0;
+    }
+    
+    private long getClicksToday(User user) {
+        // Get today's clicks from analytics
+        return urlAnalyticsRepository.getClicksForUserInDateRange(user.getId(), LocalDate.now())
+            .stream()
+            .mapToLong(UrlAnalytics::getClickCount)
+            .sum();
+    }
+    
+    private long getClicksThisMonth(User user) {
+        // Get this month's clicks from analytics
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        return urlAnalyticsRepository.getClicksForUserInDateRange(user.getId(), startOfMonth)
+            .stream()
+            .mapToLong(UrlAnalytics::getClickCount)
+            .sum();
     }
 }

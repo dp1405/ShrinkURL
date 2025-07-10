@@ -1,12 +1,21 @@
 // Main JavaScript functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-dismiss alerts after 5 seconds
+    // Auto-dismiss alerts after 5 seconds (except URL result alerts)
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
+        // Don't auto-dismiss alerts that contain URL results or have persistent-result class
+        if (!alert.querySelector('#shortenedUrl') && 
+            !alert.querySelector('#persistentShortenedUrl') && 
+            !alert.classList.contains('persistent-result') &&
+            !alert.innerHTML.includes('shortened URL') &&
+            !alert.innerHTML.includes('Your shortened URL') &&
+            !alert.innerHTML.includes('URL shortened successfully') &&
+            !alert.innerHTML.includes('Success!')) {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        }
     });
 
     // Add fade-in animation to cards

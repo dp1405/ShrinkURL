@@ -42,8 +42,13 @@
                         </div>
                     </div>
                     
+                    <!-- Display Success Message -->
+                    <div th:if="${success}" class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                    </div>
+                    
                     <!-- Display Result -->
-                    <div th:if="${shortenedUrl}" class="alert alert-success">
+                    <div th:if="${shortenedUrl}" class="alert alert-success persistent-result" style="position: relative;">
                         <h5><i class="fas fa-check-circle"></i> Success!</h5>
                         <p class="mb-2">Your shortened URL:</p>
                         <div class="input-group">
@@ -58,6 +63,11 @@
                                 <i class="fas fa-copy"></i> Copy
                             </button>
                         </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" 
+                                onclick="clearServerResult()" 
+                                style="position: absolute; top: 10px; right: 10px;">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     
                     <!-- Display Error -->
@@ -125,18 +135,44 @@
     <script>
         function copyToClipboard() {
             const input = document.getElementById('shortenedUrl');
-            input.select();
-            document.execCommand('copy');
-            
-            // Change button text temporarily
-            const button = event.target;
-            const originalText = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            
-            setTimeout(() => {
-                button.innerHTML = originalText;
-            }, 2000);
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                
+                // Change button text temporarily
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }
         }
+        
+        function clearServerResult() {
+            const serverResult = document.getElementById('shortenedUrl');
+            if (serverResult) {
+                const resultDiv = serverResult.closest('.alert');
+                if (resultDiv) {
+                    resultDiv.remove();
+                }
+            }
+        }
+        
+        // Optional: Clear the result when a new URL is being shortened
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    // Clear any existing result before submitting
+                    const existingResult = document.querySelector('.alert.persistent-result');
+                    if (existingResult) {
+                        existingResult.remove();
+                    }
+                });
+            }
+        });
     </script>
 </main>
 </body>

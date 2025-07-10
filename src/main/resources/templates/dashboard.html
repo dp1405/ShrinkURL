@@ -62,7 +62,7 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <i class="fas fa-link text-primary"></i>
-                        <h3>0</h3>
+                        <h3 th:text="${stats.totalUrls}">0</h3>
                         <p class="text-secondary mb-0">Total URLs</p>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <i class="fas fa-mouse-pointer text-success"></i>
-                        <h3>0</h3>
+                        <h3 th:text="${stats.totalClicks}">0</h3>
                         <p class="text-secondary mb-0">Total Clicks</p>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <i class="fas fa-chart-bar text-warning"></i>
-                        <h3>0%</h3>
+                        <h3 th:text="${#numbers.formatDecimal(stats.avgCtr * 100, 1, 1)} + '%'">0%</h3>
                         <p class="text-secondary mb-0">Average CTR</p>
                     </div>
                 </div>
@@ -97,9 +97,53 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-center text-secondary py-5">
-                            No URLs created yet. Start shortening URLs to see them here.
-                        </p>
+                        <div th:if="${recentUrls.size() > 0}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Short URL</th>
+                                            <th>Original URL</th>
+                                            <th>Clicks</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="url : ${recentUrls}">
+                                            <td>
+                                                <a th:href="@{/{shortCode}(shortCode=${url.shortCode})}" 
+                                                   th:text="${url.shortCode}" 
+                                                   target="_blank" 
+                                                   class="text-primary">
+                                                    Short URL
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a th:href="${url.originalUrl}" 
+                                                   th:text="${#strings.abbreviate(url.originalUrl, 50)}" 
+                                                   target="_blank" 
+                                                   class="text-muted">
+                                                    Original URL
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary" th:text="${url.clickCount}">0</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted" th:text="${#temporals.format(url.createdAt, 'dd MMM yyyy HH:mm')}">
+                                                    Created date
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div th:if="${recentUrls.size() == 0}">
+                            <p class="text-center text-secondary py-5">
+                                No URLs created yet. Start shortening URLs to see them here.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

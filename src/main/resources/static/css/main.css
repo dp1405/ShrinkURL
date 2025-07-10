@@ -148,6 +148,21 @@ main {
     opacity: 0.7;
 }
 
+.form-control[readonly] {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    color: var(--text-primary);
+    font-weight: 500;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.form-control[readonly]:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.25);
+}
+
 .form-label {
     color: var(--text-secondary);
     font-weight: 500;
@@ -169,6 +184,25 @@ main {
 .alert-success {
     background-color: rgba(76, 175, 80, 0.2);
     color: #4CAF50;
+}
+
+.persistent-result {
+    border: 2px solid var(--accent);
+    background-color: rgba(76, 175, 80, 0.1);
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.persistent-result .form-control[readonly] {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .alert-danger {

@@ -72,9 +72,9 @@
 
     <!-- Alert Messages -->
     <div class="container mt-3">
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div th:if="${success}" class="alert alert-success" role="alert" th:classappend="${shortenedUrl} ? 'persistent-success' : 'alert-dismissible fade show'">
             <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button th:if="${shortenedUrl == null}" type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
