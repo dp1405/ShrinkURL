@@ -49,23 +49,36 @@ public class GlobalRateLimitFilter extends OncePerRequestFilter {
         
         // Check per-minute limit
         if (!rateLimitService.isGloballyAllowed(clientIp + ":minute", globalRequestsPerMinute, 60)) {
-            sendRateLimitResponse(response, "Global rate limit exceeded (per minute)");
+            sendRateLimitResponse(request, response, "Global rate limit exceeded (per minute)");
             return;
         }
         
         // Check per-hour limit
         if (!rateLimitService.isGloballyAllowed(clientIp + ":hour", globalRequestsPerHour, 3600)) {
-            sendRateLimitResponse(response, "Global rate limit exceeded (per hour)");
+            sendRateLimitResponse(request, response, "Global rate limit exceeded (per hour)");
             return;
         }
         
         filterChain.doFilter(request, response);
     }
     
-    private void sendRateLimitResponse(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\":\"" + message + "\"}");
+    private void sendRateLimitResponse(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
+        // Check if this is an API request (JSON expected)
+        String acceptHeader = request.getHeader("Accept");
+        boolean isApiRequest = acceptHeader != null && acceptHeader.contains("application/json");
+        
+        if (isApiRequest) {
+            // Return JSON for API requests
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"" + message + "\"}");
+        } else {
+            // Redirect to error page for browser requests
+            String errorUrl = "/error/rate-limit?current=" + globalRequestsPerMinute + 
+                             "&limit=" + globalRequestsPerMinute + 
+                             "&window=60&retryAfter=60";
+            response.sendRedirect(errorUrl);
+        }
     }
     
     private String getClientIpAddress(HttpServletRequest request) {

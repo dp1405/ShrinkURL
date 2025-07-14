@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Aspect
 @Component
@@ -60,10 +61,26 @@ public class RateLimitAspect {
             response.setHeader("X-RateLimit-Remaining", String.valueOf(status.getRemaining()));
             response.setHeader("X-RateLimit-Reset", String.valueOf(status.getResetTime()));
             
-            // Return rate limit exceeded response
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"" + rateLimit.message() + "\"}");
+            // Check if this is an API request (JSON expected) or browser request
+            String acceptHeader = request.getHeader("Accept");
+            boolean isApiRequest = acceptHeader != null && acceptHeader.contains("application/json");
+            
+            if (isApiRequest) {
+                // Return JSON for API requests
+                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"" + rateLimit.message() + "\"}");
+            } else {
+                // Redirect to error page for browser requests
+                int retryAfter = (int) Math.max(status.getResetTime() - System.currentTimeMillis() / 1000, 0);
+                String errorUrl = "/error/rate-limit?key=" + rateLimitKey + 
+                                 "&current=" + status.getCurrentCount() + 
+                                 "&limit=" + status.getLimit() + 
+                                 "&window=" + rateLimit.timeWindow() + 
+                                 "&retryAfter=" + retryAfter +
+                                 "&redirectUrl=" + request.getRequestURI();
+                response.sendRedirect(errorUrl);
+            }
             
             return null;
         }

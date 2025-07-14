@@ -10,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.stir.shrinkurl.dto.UrlShortenRequest;
 import org.stir.shrinkurl.entity.User;
-import org.stir.shrinkurl.repository.UserRepository;
 import org.stir.shrinkurl.service.UrlService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @Slf4j
 public class MainController {
-
-    @Autowired
-    private UserRepository userRepository;
     
     @Autowired
     private UrlService urlService;

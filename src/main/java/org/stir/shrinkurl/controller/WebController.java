@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.stir.shrinkurl.dto.UrlShortenRequest;
 import org.stir.shrinkurl.entity.Url;
@@ -23,6 +24,14 @@ public class WebController {
 
     @Value("${url-shortener.base-url:http://localhost:8085}")
     private String baseUrl;
+    
+    /**
+     * Test dashboard for Redis and Rate Limiting
+     */
+    @GetMapping("/test-dashboard")
+    public String testDashboard() {
+        return "test-dashboard";
+    }
     
     /**
      * Handle URL shortening form submission

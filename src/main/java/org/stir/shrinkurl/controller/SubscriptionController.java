@@ -17,7 +17,6 @@ import org.stir.shrinkurl.entity.User;
 import org.stir.shrinkurl.enums.SubscriptionPlan;
 import org.stir.shrinkurl.exceptions.TrialAlreadyUsedException;
 import org.stir.shrinkurl.service.SubscriptionService;
-import org.stir.shrinkurl.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/subscription")
 @Slf4j
 public class SubscriptionController {
-    
-    @Autowired
-    private UserService userService;
     
     @Autowired
     private SubscriptionService subscriptionService;
