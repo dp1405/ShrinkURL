@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main}, ~{::scripts})}">
 <head>
-    <title>Payment Gateway - ShrinkURL</title>
+    <title>Payment Simulation - ShrinkURL</title>
 </head>
 <body>
 <main>
@@ -21,20 +21,38 @@
                             This is a simulation of a payment gateway. In production, you would be redirected to a real payment processor.
                         </div>
                         
-                        <form id="payment-simulate-form">
-                            <input type="hidden" id="subscriptionId" th:value="${subscriptionId}">
+                        <!-- Upgrade Summary -->
+                        <div th:if="${planName}" class="alert alert-secondary">
+                            <h6><i class="fas fa-receipt"></i> Upgrade Summary</h6>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <strong>From:</strong> <span th:text="${currentPlan}">Current Plan</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>To:</strong> <span th:text="${planName}">New Plan</span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <strong>Price:</strong> <span th:text="${planPrice}">$0</span>
+                            </div>
+                        </div>
+                        
+                        <form th:action="@{/subscription/payment/callback}" method="post" id="payment-simulate-form">
+                            <input type="hidden" name="subscriptionId" th:value="${subscriptionId}">
+                            <input type="hidden" name="paymentId" value="sim_payment_123456">
+                            <input type="hidden" name="transactionId" value="sim_txn_789012">
                             
                             <div class="mb-4">
                                 <label class="form-label">Select Payment Result:</label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="payment-status" 
+                                    <input class="form-check-input" type="radio" name="status" 
                                            id="payment-success" value="success" checked>
                                     <label class="form-check-label" for="payment-success">
                                         <i class="fas fa-check-circle text-success"></i> Successful Payment
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="payment-status" 
+                                    <input class="form-check-input" type="radio" name="status" 
                                            id="payment-failure" value="failure">
                                     <label class="form-check-label" for="payment-failure">
                                         <i class="fas fa-times-circle text-danger"></i> Failed Payment
@@ -44,7 +62,7 @@
                             
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-arrow-right"></i> Continue
+                                    <i class="fas fa-arrow-right"></i> Process Payment
                                 </button>
                             </div>
                         </form>
@@ -54,5 +72,9 @@
         </div>
     </div>
 </main>
+
+<th:block th:fragment="scripts">
+    <!-- No additional scripts needed for payment simulation page -->
+</th:block>
 </body>
 </html>

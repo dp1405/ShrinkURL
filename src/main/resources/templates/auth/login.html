@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main}, ~{::scripts})}">
 <head>
     <title>Login - ShrinkURL</title>
 </head>
@@ -99,5 +99,9 @@
         </div>
     </div>
 </main>
+
+<th:block th:fragment="scripts">
+    <!-- No additional scripts needed for login page -->
+</th:block>
 </body>
 </html>

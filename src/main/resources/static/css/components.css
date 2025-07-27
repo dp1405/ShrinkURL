@@ -288,6 +288,219 @@
     padding: 1.5rem;
 }
 
+/* Subscription Plan Cards */
+.plan-card {
+    border: 2px solid #e9ecef;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.plan-card.current-plan {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, transparent 100%);
+}
+
+.plan-card.current-plan::before {
+    content: 'Current Plan';
+    position: absolute;
+    top: 15px;
+    right: -25px;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transform: rotate(45deg);
+    z-index: 10;
+}
+
+.plan-card.border-success {
+    border-color: var(--success-color);
+    position: relative;
+}
+
+.plan-card.border-success::after {
+    content: 'Most Popular';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.plan-card .card-header {
+    text-align: center;
+    padding: 2rem 1.5rem 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.plan-card .card-header.bg-success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #198754 100%);
+}
+
+.plan-card .card-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+.plan-card .card-header.bg-success h3 {
+    color: white;
+}
+
+.plan-card .price {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.plan-card .card-header.bg-success .price {
+    color: white;
+}
+
+.plan-card .price small {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.plan-card .card-header.bg-success .price small {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-features li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f8f9fa;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.plan-features li:last-child {
+    border-bottom: none;
+}
+
+.plan-features li i {
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.plan-features li i.fa-check {
+    color: var(--success-color);
+}
+
+.plan-features li i.fa-times {
+    color: #dc3545;
+}
+
+.plan-features li.text-muted {
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+.plan-card .card-footer {
+    background: transparent;
+    border-top: 1px solid #f8f9fa;
+    padding: 1.5rem;
+}
+
+.plan-card .btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+/* Usage Statistics */
+.usage-progress {
+    margin-bottom: 1.5rem;
+}
+
+.usage-progress h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+.usage-progress .progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e9ecef;
+}
+
+.usage-progress .progress-bar {
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 10px;
+    text-align: center;
+    padding: 0 8px;
+}
+
+.usage-progress small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .plan-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .plan-card .card-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+    
+    .plan-card .price {
+        font-size: 1.5rem;
+    }
+    
+    .plan-features li {
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+}
+
+/* Animation for plan selection */
+@keyframes planSelect {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.plan-card.selecting {
+    animation: planSelect 0.3s ease;
+}
+
 /* Responsive Utilities */
 @media (max-width: 576px) {
     .btn-responsive {

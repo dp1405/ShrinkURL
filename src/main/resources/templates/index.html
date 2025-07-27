@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main}, ~{::scripts})}">
 <head>
     <title>ShrinkURL - URL Shortener</title>
 </head>
@@ -132,6 +132,9 @@
         </div>
     </div>
     
+</main>
+
+<th:block th:fragment="scripts">
     <script>
         function copyToClipboard() {
             const input = document.getElementById('shortenedUrl');
@@ -174,6 +177,6 @@
             }
         });
     </script>
-</main>
+</th:block>
 </body>
 </html>

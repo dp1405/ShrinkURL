@@ -1,154 +1,202 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main}, ~{::scripts})}">
 <head>
     <title>Dashboard - ShrinkURL</title>
 </head>
 <body>
-<main>
-    <div class="container py-5">
-        <div class="dashboard-header">
-            <h1>Welcome, <span th:text="${user.name}">User</span>!</h1>
-        </div>
-        
-        <!-- Subscription Status -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-crown"></i> Your Subscription
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <p class="mb-2">
-                                    <strong>Current Plan:</strong>
-                                    <span class="badge subscription-badge"
-                                          th:classappend="${subscription.plan.name() == 'FREE' ? 'bg-secondary' : 'bg-success'}"
-                                          th:text="${subscription.plan.displayName}">Free</span>
-                                </p>
-                                <p class="mb-2" th:if="${subscription.active}">
-                                    <strong>Status:</strong>
-                                    <span class="badge bg-success">Active</span>
-                                </p>
-                                <p class="mb-0" th:if="${subscription.plan.name() != 'FREE' && subscription.daysRemaining > 0}">
-                                    <strong>Days Remaining:</strong>
-                                    <span th:text="${subscription.daysRemaining}">0</span> days
-                                </p>
+    <main>
+        <div class="container py-5">
+            <div class="dashboard-header">
+                <h1>Welcome, <span th:text="${user.name}">User</span>!</h1>
+            </div>
+            
+            <!-- Subscription Status -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-crown"></i> Your Subscription
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <p class="mb-2">
+                                        <strong>Current Plan:</strong>
+                                        <span class="badge subscription-badge ms-2"
+                                            th:classappend="${subscription.plan.name() == 'FREE' ? 'bg-secondary' : (subscription.plan.name() == 'LIFETIME' ? 'bg-warning text-dark' : 'bg-success')}"
+                                            th:text="${subscription.plan.displayName}">Free</span>
+                                    </p>
+                                    <p class="mb-2" th:if="${subscription.active}">
+                                        <strong>Status:</strong>
+                                        <span class="badge ms-2" 
+                                            th:classappend="${subscription.status.name() == 'TRIAL' ? 'bg-info' : 'bg-success'}"
+                                            th:text="${subscription.status.name() == 'TRIAL' ? 'Free Trial' : 'Active'}">Active</span>
+                                    </p>
+                                    <p class="mb-2" th:if="${subscription.plan.name() != 'FREE' && subscription.plan.name() != 'LIFETIME' && subscription.daysRemaining > 0}">
+                                        <strong>Days Remaining:</strong>
+                                        <span class="badge ms-2"
+                                            th:classappend="${subscription.daysRemaining <= 7 ? 'bg-danger' : subscription.daysRemaining <= 30 ? 'bg-warning text-dark' : 'bg-info'}"
+                                            th:text="${subscription.daysRemaining} + ' days'">0 days</span>
+                                    </p>
+                                    <p class="mb-0" th:if="${subscription.plan.name() == 'LIFETIME'}">
+                                        <strong>Lifetime Access:</strong>
+                                        <span class="badge bg-warning text-dark ms-2">No Expiration</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a th:if="${subscription.plan.name() == 'FREE'}" 
+                                    th:href="@{/subscription/plans}" 
+                                    class="btn btn-primary">
+                                        <i class="fas fa-crown"></i> Upgrade Plan
+                                    </a>
+                                    <a th:if="${subscription.plan.name() != 'FREE' && subscription.plan.name() != 'LIFETIME'}" 
+                                    th:href="@{/subscription/plans}" 
+                                    class="btn btn-outline-primary me-2">
+                                        <i class="fas fa-arrow-up"></i> Upgrade
+                                    </a>
+                                    <a th:if="${subscription.plan.name() != 'FREE' && subscription.plan.name() != 'LIFETIME'}" 
+                                    th:href="@{/subscription/cancel}" 
+                                    class="btn btn-outline-danger">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-6 text-end">
-                                <a th:if="${subscription.plan.name() == 'FREE'}" 
-                                   th:href="@{/subscription/plans}" 
-                                   class="btn btn-primary">
-                                    <i class="fas fa-arrow-up"></i> Upgrade Plan
-                                </a>
-                                <a th:if="${subscription.plan.name() != 'FREE'}" 
-                                   th:href="@{/subscription/cancel}" 
-                                   class="btn btn-outline-danger">
-                                    <i class="fas fa-times"></i> Cancel Subscription
-                                </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <i class="fas fa-link text-primary"></i>
+                            <h3 th:text="${stats.totalUrls}">0</h3>
+                            <p class="text-secondary mb-0">Total URLs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <i class="fas fa-mouse-pointer text-success"></i>
+                            <h3 th:text="${stats.totalClicks}">0</h3>
+                            <p class="text-secondary mb-0">Total Clicks</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <i class="fas fa-chart-bar text-warning"></i>
+                            <h3 th:text="${#numbers.formatDecimal(stats.avgCtr * 100, 1, 1)} + '%'">0%</h3>
+                            <p class="text-secondary mb-0">Average CTR</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent URLs -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clock"></i> Recent URLs
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="urls-container">
+                                <div th:if="${recentUrls.size() > 0}">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover" id="urls-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Short URL</th>
+                                                    <th>Original URL</th>
+                                                    <th>Clicks</th>
+                                                    <th>Created</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="urls-tbody">
+                                                <tr th:each="url : ${recentUrls}">
+                                                    <td>
+                                                        <a th:href="@{/{shortCode}(shortCode=${url.shortCode})}" 
+                                                        th:text="${url.shortCode}" 
+                                                        target="_blank" 
+                                                        class="text-primary fw-bold">
+                                                            Short URL
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <a th:href="${url.originalUrl}" 
+                                                        th:text="${#strings.abbreviate(url.originalUrl, 50)}" 
+                                                        target="_blank" 
+                                                        class="text-dark">
+                                                            Original URL
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-primary" th:text="${url.clickCount}">0</span>
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-dark" th:text="${#temporals.format(url.createdAt, 'dd MMM yyyy HH:mm')}">
+                                                            Created date
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary copy-btn" 
+                                                                th:data-short-url="@{/{shortCode}(shortCode=${url.shortCode})}"
+                                                                th:data-short-code="${url.shortCode}"
+                                                                title="Copy short URL">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                        <a th:href="@{/api/urls/{id}/analytics-page(id=${url.id})}" 
+                                                        class="btn btn-sm btn-outline-info ms-1"
+                                                        title="View analytics">
+                                                            <i class="fas fa-chart-line"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Load More Button -->
+                                    <div class="text-center mt-3" th:if="${hasMoreUrls}">
+                                        <button id="load-more-btn" class="btn btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Load More (10)
+                                        </button>
+                                        <div id="loading-indicator" class="mt-2" style="display: none;">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <span class="ms-2">Loading more URLs...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${recentUrls.size() == 0}">
+                                    <p class="text-center text-secondary py-5">
+                                        No URLs created yet. <a href="/" class="text-decoration-none">Start shortening URLs</a> to see them here.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Quick Stats -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <i class="fas fa-link text-primary"></i>
-                        <h3 th:text="${stats.totalUrls}">0</h3>
-                        <p class="text-secondary mb-0">Total URLs</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <i class="fas fa-mouse-pointer text-success"></i>
-                        <h3 th:text="${stats.totalClicks}">0</h3>
-                        <p class="text-secondary mb-0">Total Clicks</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <i class="fas fa-chart-bar text-warning"></i>
-                        <h3 th:text="${#numbers.formatDecimal(stats.avgCtr * 100, 1, 1)} + '%'">0%</h3>
-                        <p class="text-secondary mb-0">Average CTR</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recent URLs -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-clock"></i> Recent URLs
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div th:if="${recentUrls.size() > 0}">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Short URL</th>
-                                            <th>Original URL</th>
-                                            <th>Clicks</th>
-                                            <th>Created</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="url : ${recentUrls}">
-                                            <td>
-                                                <a th:href="@{/{shortCode}(shortCode=${url.shortCode})}" 
-                                                   th:text="${url.shortCode}" 
-                                                   target="_blank" 
-                                                   class="text-primary">
-                                                    Short URL
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <a th:href="${url.originalUrl}" 
-                                                   th:text="${#strings.abbreviate(url.originalUrl, 50)}" 
-                                                   target="_blank" 
-                                                   class="text-muted">
-                                                    Original URL
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-primary" th:text="${url.clickCount}">0</span>
-                                            </td>
-                                            <td>
-                                                <small class="text-muted" th:text="${#temporals.format(url.createdAt, 'dd MMM yyyy HH:mm')}">
-                                                    Created date
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div th:if="${recentUrls.size() == 0}">
-                            <p class="text-center text-secondary py-5">
-                                No URLs created yet. Start shortening URLs to see them here.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</main>
+    </main>
+
+    <th:block th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script th:src="@{/js/dashboard.js}"></script>
+    </th:block>
 </body>
 </html>

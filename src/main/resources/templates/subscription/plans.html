@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/base :: layout(~{::title}, ~{::main})}">
+      th:replace="~{layouts/base :: layout(~{::title}, ~{::main}, ~{::scripts})}">
 <head>
     <title>Subscription Plans - ShrinkURL</title>
 </head>
@@ -15,139 +15,111 @@
             <h4><i class="fas fa-gift"></i> Try Premium Free for 7 Days!</h4>
             <p class="mb-3">Get access to all premium features with our free trial.</p>
             <form th:action="@{/subscription/trial/activate}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-lg">
                     <i class="fas fa-rocket"></i> Start Free Trial
                 </button>
             </form>
         </div>
         
+        <!-- Current Plan Info -->
+        <div th:if="${currentPlan.name() != 'FREE'}" class="alert alert-success text-center mb-5">
+            <h4><i class="fas fa-crown"></i> You're on the <span th:text="${currentPlan.displayName}">Plan</span></h4>
+            <p class="mb-0">Enjoy all the premium features of your subscription!</p>
+        </div>
+        
+        <!-- Recommendation Banner -->
+        <div th:if="${recommendedPlan != currentPlan}" class="alert alert-primary text-center mb-5">
+            <h5><i class="fas fa-lightbulb"></i> Recommendation</h5>
+            <p class="mb-2" th:text="${recommendationReason}">Recommendation text</p>
+            <div th:if="${recommendedPlan != currentPlan}">
+                <strong>Recommended: </strong>
+                <span th:text="${recommendedPlan.displayName}">Plan Name</span>
+                <span class="badge bg-primary ms-2" th:text="${recommendedPlan.formattedPrice + recommendedPlan.pricePeriod}">Price</span>
+            </div>
+        </div>
+        
         <div class="row">
-            <!-- Free Plan -->
-            <div class="col-md-3 mb-4">
+            <!-- Iterate through all plans dynamically -->
+            <div th:each="plan : ${plans}" class="col-md-3 mb-4">
                 <div class="card plan-card h-100" 
-                     th:classappend="${currentPlan.name() == 'FREE' ? 'current-plan' : ''}">
+                     th:classappend="${currentPlan == plan ? 'current-plan' : ''}">
                     <div class="card-header">
-                        <h3>Free</h3>
-                        <div class="price">$0<small>/month</small></div>
+                        <h3 th:text="${plan.displayName}">Plan Name</h3>
+                        <div class="price">
+                            <span th:text="${plan.formattedPrice}">$0</span>
+                            <small th:text="${plan.pricePeriod}"></small>
+                        </div>
+                        
                     </div>
                     <div class="card-body">
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 10 URLs</li>
-                            <li><i class="fas fa-check"></i> 100 API calls/day</li>
-                            <li><i class="fas fa-check"></i> 100 MB storage</li>
-                            <li><i class="fas fa-check"></i> Basic analytics</li>
-                            <li><i class="fas fa-times"></i> Custom domains</li>
-                            <li><i class="fas fa-times"></i> Priority support</li>
+                            <li th:each="feature : ${plan.features}">
+                                <i class="fas fa-check"></i> 
+                                <span th:text="${feature}">Feature</span>
+                            </li>
+                            <li th:each="restriction : ${plan.restrictions}" class="text-muted">
+                                <i class="fas fa-times"></i> 
+                                <span th:text="${restriction}">Restriction</span>
+                            </li>
                         </ul>
+                        
+                        <!-- Additional detailed info -->
+                        <div th:if="${plan.isPremium()}" class="mt-3 pt-3 border-top">
+                            <small class="text-muted">
+                                <div><strong>Storage:</strong> <span th:text="${plan.formattedStorage}">Storage</span></div>
+                                <div><strong>URL Retention:</strong> <span th:text="${plan.retentionDescription}">Retention</span></div>
+                            </small>
+                        </div>
                     </div>
                     <div class="card-footer text-center">
-                        <button class="btn btn-secondary" disabled 
-                                th:if="${currentPlan.name() == 'FREE'}">
-                            Current Plan
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Monthly Plan -->
-            <div class="col-md-3 mb-4">
-                <div class="card plan-card h-100" 
-                     th:classappend="${currentPlan.name() == 'MONTHLY' ? 'current-plan' : ''}">
-                    <div class="card-header">
-                        <h3>Monthly</h3>
-                        <div class="price">$9.99<small>/month</small></div>
-                    </div>
-                    <div class="card-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 1,000 URLs</li>
-                            <li><i class="fas fa-check"></i> 10,000 API calls/day</li>
-                            <li><i class="fas fa-check"></i> 5 GB storage</li>
-                            <li><i class="fas fa-check"></i> Advanced analytics</li>
-                            <li><i class="fas fa-check"></i> Custom domains</li>
-                            <li><i class="fas fa-check"></i> Email support</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer text-center">
-                        <form th:action="@{/subscription/upgrade}" method="post"
-                              th:if="${currentPlan.name() != 'MONTHLY'}">
-                            <input type="hidden" name="plan" value="MONTHLY"/>
-                            <button type="submit" class="btn btn-primary">
-                                Choose Plan
+                        <!-- Free plan button -->
+                        <div th:if="${plan.name() == 'FREE'}">
+                            <button th:if="${currentPlan == plan}" 
+                                    class="btn btn-secondary" disabled>
+                                <i class="fas fa-check"></i> Current Plan
                             </button>
-                        </form>
-                        <button class="btn btn-secondary" disabled 
-                                th:if="${currentPlan.name() == 'MONTHLY'}">
-                            Current Plan
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Yearly Plan -->
-            <div class="col-md-3 mb-4">
-                <div class="card plan-card h-100 border-success" 
-                     th:classappend="${currentPlan.name() == 'YEARLY' ? 'current-plan' : ''}">
-                    <div class="card-header bg-success text-white">
-                        <h3>Yearly</h3>
-                        <div class="price">$99.99<small>/year</small></div>
-                        <span class="badge bg-warning text-dark">Save 17%</span>
-                    </div>
-                    <div class="card-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> 10,000 URLs</li>
-                            <li><i class="fas fa-check"></i> 100,000 API calls/day</li>
-                            <li><i class="fas fa-check"></i> 50 GB storage</li>
-                            <li><i class="fas fa-check"></i> Advanced analytics</li>
-                            <li><i class="fas fa-check"></i> Custom domains</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer text-center">
-                        <form th:action="@{/subscription/upgrade}" method="post"
-                              th:if="${currentPlan.name() != 'YEARLY'}">
-                            <input type="hidden" name="plan" value="YEARLY"/>
-                            <button type="submit" class="btn btn-success">
-                                Choose Plan
+                            <span th:if="${currentPlan != plan}" class="text-muted">
+                                <i class="fas fa-info-circle"></i> Contact support for downgrades
+                            </span>
+                        </div>
+                        
+                        <!-- Premium plan upgrade button -->
+                        <div th:if="${plan.isPremium() && currentPlan != plan}">
+                            <!-- Check if it's an upgrade -->
+                            <div th:if="${plan.getPrice() > currentPlan.getPrice()}">
+                                <form th:action="@{/subscription/upgrade}" method="post" class="d-inline">
+                                    <input type="hidden" name="plan" th:value="${plan.name()}"/>
+                                    <button type="submit" 
+                                            th:class="${plan.isPopular() ? 'btn btn-success' : 'btn btn-primary'}"
+                                            onclick="return confirm('Are you sure you want to upgrade to ' + '[[${plan.displayName}]]' + '?')">
+                                        <i class="fas fa-arrow-up"></i> Upgrade to [[${plan.displayName}]]
+                                    </button>
+                                </form>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt"></i> 30-day money-back guarantee
+                                    </small>
+                                </div>
+                            </div>
+                            <!-- Check if it's a downgrade -->
+                            <div th:if="${plan.getPrice() <= currentPlan.getPrice()}">
+                                <button class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-info-circle"></i> Contact support for downgrades
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Current premium plan button -->
+                        <div th:if="${plan.isPremium() && currentPlan == plan}">
+                            <button class="btn btn-success" disabled>
+                                <i class="fas fa-crown"></i> Current Plan
                             </button>
-                        </form>
-                        <button class="btn btn-secondary" disabled 
-                                th:if="${currentPlan.name() == 'YEARLY'}">
-                            Current Plan
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Lifetime Plan -->
-            <div class="col-md-3 mb-4">
-                <div class="card plan-card h-100" 
-                     th:classappend="${currentPlan.name() == 'LIFETIME' ? 'current-plan' : ''}">
-                    <div class="card-header">
-                        <h3>Lifetime</h3>
-                        <div class="price">$299.99<small> one-time</small></div>
-                    </div>
-                    <div class="card-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Unlimited URLs</li>
-                            <li><i class="fas fa-check"></i> Unlimited API calls</li>
-                            <li><i class="fas fa-check"></i> 1 TB storage</li>
-                            <li><i class="fas fa-check"></i> All features</li>
-                            <li><i class="fas fa-check"></i> Custom domains</li>
-                            <li><i class="fas fa-check"></i> 24/7 support</li>
-                        </ul>
-                    </div>
-                    <div class="card-footer text-center">
-                        <form th:action="@{/subscription/upgrade}" method="post"
-                              th:if="${currentPlan.name() != 'LIFETIME'}">
-                            <input type="hidden" name="plan" value="LIFETIME"/>
-                            <button type="submit" class="btn btn-primary">
-                                Choose Plan
-                            </button>
-                        </form>
-                        <button class="btn btn-secondary" disabled 
-                                th:if="${currentPlan.name() == 'LIFETIME'}">
-                            Current Plan
-                        </button>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt"></i> Auto-renews on subscription date
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,7 +131,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-chart-bar"></i> Current Usage
+                            <i class="fas fa-chart-bar"></i> Current Usage - <span th:text="${currentPlan.displayName}">Plan</span>
                         </h5>
                     </div>
                     <div class="card-body">
@@ -168,27 +140,67 @@
                                 <h6>URLs Created</h6>
                                 <div class="progress">
                                     <div class="progress-bar" role="progressbar" 
-                                         th:style="'width: ' + ${usage.urlUsagePercentage} + '%'">
-                                        <span th:text="${usage.urlsCreated} + ' / ' + ${usage.urlLimit}"></span>
+                                         th:style="'width: ' + ${usage.urlUsagePercentage} + '%'"
+                                         th:classappend="${usage.urlUsagePercentage > 80 ? 'bg-warning' : usage.urlUsagePercentage > 95 ? 'bg-danger' : 'bg-success'}">
+                                        <span th:text="${usage.urlUsageDisplay}"></span>
                                     </div>
                                 </div>
+                                <small class="text-muted">
+                                    Current plan allows <span th:text="${currentPlan.formattedUrlLimit}">0</span> URLs
+                                </small>
                             </div>
                             <div class="col-md-4 usage-progress">
                                 <h6>API Calls Today</h6>
                                 <div class="progress">
                                     <div class="progress-bar" role="progressbar" 
-                                         th:style="'width: ' + ${usage.apiUsagePercentage} + '%'">
-                                        <span th:text="${usage.apiCallsToday} + ' / ' + ${usage.apiCallLimit}"></span>
+                                         th:style="'width: ' + ${usage.apiUsagePercentage} + '%'"
+                                         th:classappend="${usage.apiUsagePercentage > 80 ? 'bg-warning' : usage.apiUsagePercentage > 95 ? 'bg-danger' : 'bg-success'}">
+                                        <span th:text="${usage.apiUsageDisplay}"></span>
                                     </div>
                                 </div>
+                                <small class="text-muted">
+                                    Daily limit: <span th:text="${currentPlan.formattedApiLimit}">0</span> calls
+                                </small>
                             </div>
                             <div class="col-md-4 usage-progress">
                                 <h6>Storage Used</h6>
                                 <div class="progress">
                                     <div class="progress-bar" role="progressbar" 
-                                         th:style="'width: ' + ${usage.storageUsagePercentage} + '%'">
-                                        <span th:text="${#numbers.formatDecimal(usage.storageUsed / 1048576.0, 1, 2)} + ' MB'"></span>
+                                         th:style="'width: ' + ${usage.storageUsagePercentage} + '%'"
+                                         th:classappend="${usage.storageUsagePercentage > 80 ? 'bg-warning' : usage.storageUsagePercentage > 95 ? 'bg-danger' : 'bg-success'}">
+                                        <span th:text="${usage.storageUsageDisplay}"></span>
                                     </div>
+                                </div>
+                                <small class="text-muted">
+                                    Storage limit: <span th:text="${currentPlan.formattedStorage}">0</span>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Statistics -->
+                        <div class="row mt-4">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h5 class="text-primary" th:text="${usage.totalClicks}">0</h5>
+                                    <small class="text-muted">Total Clicks</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h5 class="text-success" th:text="${usage.clicksToday}">0</h5>
+                                    <small class="text-muted">Clicks Today</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h5 class="text-warning" th:text="${usage.clicksThisMonth}">0</h5>
+                                    <small class="text-muted">Clicks This Month</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h5 class="text-info" th:text="${currentPlan.retentionDescription}">Retention</h5>
+                                    <small class="text-muted">URL Retention</small>
                                 </div>
                             </div>
                         </div>
@@ -196,7 +208,220 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Usage Insights -->
+        <div th:if="${usageInsights}" class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-line"></i> Usage Insights
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Highest Usage</small>
+                                    <h6 th:text="${usageInsights.highestUsage}">Category</h6>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Overall Health</small>
+                                    <h6 th:text="${usageInsights.overallHealth}" 
+                                        th:class="${usageInsights.overallHealth == 'CRITICAL' ? 'text-danger' : 
+                                                  usageInsights.overallHealth == 'HIGH' ? 'text-warning' : 
+                                                  usageInsights.overallHealth == 'MODERATE' ? 'text-info' : 'text-success'}">
+                                        Health
+                                    </h6>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Days Until Limit</small>
+                                    <h6 th:text="${usageInsights.daysUntilLimit}" 
+                                        th:class="${usageInsights.daysUntilLimit <= 7 ? 'text-danger' : 
+                                                  usageInsights.daysUntilLimit <= 15 ? 'text-warning' : 'text-success'}">
+                                        Days
+                                    </h6>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted">Needs Upgrade</small>
+                                    <h6 th:text="${usageInsights.needsUpgrade ? 'Yes' : 'No'}" 
+                                        th:class="${usageInsights.needsUpgrade ? 'text-danger' : 'text-success'}">
+                                        Status
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Plan Comparison Table -->
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-table"></i> Detailed Plan Comparison
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th th:each="plan : ${plans}" th:text="${plan.displayName}">Plan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-light"><strong>Price</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}" th:text="${plan.formattedPrice + plan.pricePeriod}">Price</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>URL Limit</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}" th:text="${plan.formattedUrlLimit}">URLs</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>API Calls/Day</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}" th:text="${plan.formattedApiLimit}">API</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>Storage</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}" th:text="${plan.formattedStorage}">Storage</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>URL Retention</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}" th:text="${plan.retentionDescription}">Retention</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>Custom Short Codes</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}">
+                                            <i th:class="${plan.isPremium() ? 'fas fa-check text-success' : 'fas fa-times text-danger'}"></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>Custom Domains</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}">
+                                            <i th:class="${plan.isPremium() ? 'fas fa-check text-success' : 'fas fa-times text-danger'}"></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>Advanced Analytics</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}">
+                                            <i th:class="${plan.isPremium() ? 'fas fa-check text-success' : 'fas fa-times text-danger'}"></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-light"><strong>Support Level</strong></td>
+                                        <td class="text-light" th:each="plan : ${plans}">
+                                            <span th:switch="${plan.name()}">
+                                                <span th:case="'FREE'">Community</span>
+                                                <span th:case="'MONTHLY'">Email</span>
+                                                <span th:case="'YEARLY'">Priority</span>
+                                                <span th:case="'LIFETIME'">24/7</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
+
+<th:block th:fragment="scripts">
+    <style>
+        .plan-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 12px;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .plan-card.current-plan {
+            border: 2px solid #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+        
+        .plan-card .card-header {
+            /* background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); */
+            border-bottom: none;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .plan-card .price {
+            font-size: 2rem;
+            font-weight: bold;
+            /* color: #007bff; */
+            margin: 0.5rem 0;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .plan-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features .fas.fa-check {
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+        
+        .plan-features .fas.fa-times {
+            color: #dc3545;
+            margin-right: 0.5rem;
+        }
+        
+        .usage-progress .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .usage-progress h6 {
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .border-success {
+            position: relative;
+        }
+        
+        .border-success::before {
+            content: "POPULAR";
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            background: #28a745;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 0 12px 0 12px;
+        }
+    </style>
+</th:block>
 </body>
 </html>

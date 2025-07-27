@@ -262,11 +262,11 @@ public class UrlService {
      */
     private int getUrlLimit(SubscriptionPlan plan) {
         switch (plan) {
-            case FREE: return 10;
-            case MONTHLY: return 1000;
-            case YEARLY: return 10000;
+            case FREE: return 20;
+            case MONTHLY: return 50;
+            case YEARLY: return 100;
             case LIFETIME: return Integer.MAX_VALUE;
-            default: return 10;
+            default: return 20;
         }
     }
     
@@ -328,6 +328,32 @@ public class UrlService {
             .collect(java.util.stream.Collectors.toList());
     }
     
+    /**
+     * Get paginated URLs for user
+     */
+    public List<Url> getPaginatedUserUrls(Long userId, int page, int size) {
+        return urlRepository.findByUserIdAndIsActiveOrderByCreatedAtDesc(userId, true)
+            .stream()
+            .skip(page * size)
+            .limit(size)
+            .collect(java.util.stream.Collectors.toList());
+    }
+    
+    /**
+     * Check if user has more URLs beyond the current page
+     */
+    public boolean hasMoreUrls(Long userId, int page, int size) {
+        long totalUrls = getUserUrlCount(userId);
+        return (page + 1) * size < totalUrls;
+    }
+    
+    /**
+     * Get total URL count for user
+     */
+    public long getUserUrlCount(Long userId) {
+        return urlRepository.countByUserIdAndIsActive(userId, true);
+    }
+
     /**
      * Dashboard statistics data class
      */

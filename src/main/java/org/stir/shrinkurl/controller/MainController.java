@@ -1,5 +1,7 @@
 package org.stir.shrinkurl.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.stir.shrinkurl.dto.UrlShortenRequest;
+import org.stir.shrinkurl.entity.Url;
 import org.stir.shrinkurl.entity.User;
 import org.stir.shrinkurl.service.UrlService;
 
@@ -51,8 +54,14 @@ public class MainController {
         UrlService.UserDashboardStats stats = urlService.getUserDashboardStats(user.getId());
         model.addAttribute("stats", stats);
         
-        // Get recent URLs (limit to 5)
-        model.addAttribute("recentUrls", urlService.getRecentUserUrls(user.getId(), 5));
+        // Get initial URLs (limit to 5 for initial load)
+        List<Url> initialUrls = urlService.getRecentUserUrls(user.getId(), 5);
+        model.addAttribute("recentUrls", initialUrls);
+        
+        // Check if there are more URLs to load
+        long totalUrls = urlService.getUserUrlCount(user.getId());
+        model.addAttribute("hasMoreUrls", totalUrls > 5);
+        model.addAttribute("totalUrls", totalUrls);
         
         return "dashboard";
     }

@@ -1,6 +1,6 @@
-// Subscription specific JavaScript
+// Enhanced Subscription JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Update plan comparison
+    // Plan card hover effects
     const planCards = document.querySelectorAll('.plan-card');
     planCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Plan selection confirmation
+    // Enhanced plan selection with animation
     const upgradeForms = document.querySelectorAll('form[action*="/subscription/upgrade"]');
     upgradeForms.forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -35,16 +35,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Payment simulation
+    // Enhanced payment simulation
     const paymentSimulateForm = document.getElementById('payment-simulate-form');
     if (paymentSimulateForm) {
         paymentSimulateForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Show loading state
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
             submitButton.disabled = true;
             
             // Simulate payment processing
@@ -57,35 +56,67 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fields = {
                     'subscriptionId': document.getElementById('subscriptionId').value,
                     'status': status,
-                    'paymentId': 'PAY_' + Date.now(),
-                    'transactionId': 'TXN_' + Date.now()
+                    'paymentId': 'pay_' + Math.random().toString(36).substr(2, 9),
+                    'transactionId': 'txn_' + Math.random().toString(36).substr(2, 9)
                 };
                 
-                for (const [key, value] of Object.entries(fields)) {
+                Object.entries(fields).forEach(([key, value]) => {
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = key;
                     input.value = value;
                     form.appendChild(input);
-                }
+                });
                 
                 document.body.appendChild(form);
                 form.submit();
-            }, 2000);
+            }, 3000);
         });
     }
+    
+    // Usage statistics animations
+    animateUsageProgress();
+    
+    // Plan comparison tooltips
+    initializePlanTooltips();
+});
 
-    // Usage progress animation
-    const progressBars = document.querySelectorAll('.progress-bar');
+function animateUsageProgress() {
+    const progressBars = document.querySelectorAll('.usage-progress .progress-bar');
+    
     progressBars.forEach(bar => {
         const width = bar.style.width;
         bar.style.width = '0%';
+        
         setTimeout(() => {
-            bar.style.transition = 'width 1s ease-out';
+            bar.style.transition = 'width 1s ease-in-out';
             bar.style.width = width;
-        }, 100);
+        }, 500);
     });
-});
+}
+
+function initializePlanTooltips() {
+    const planCards = document.querySelectorAll('.plan-card');
+    
+    planCards.forEach(card => {
+        const features = card.querySelectorAll('.plan-features li');
+        
+        features.forEach(feature => {
+            const text = feature.textContent.trim();
+            
+            // Add tooltips for specific features
+            if (text.includes('Custom short codes')) {
+                feature.setAttribute('title', 'Create branded short links with custom aliases');
+            } else if (text.includes('Custom domains')) {
+                feature.setAttribute('title', 'Use your own domain for short links');
+            } else if (text.includes('Advanced analytics')) {
+                feature.setAttribute('title', 'Detailed click tracking, geographic data, and more');
+            } else if (text.includes('Priority support')) {
+                feature.setAttribute('title', 'Get faster response times and dedicated support');
+            }
+        });
+    });
+}
 
 // Calculate remaining days percentage
 function calculateRemainingPercentage(endDate) {

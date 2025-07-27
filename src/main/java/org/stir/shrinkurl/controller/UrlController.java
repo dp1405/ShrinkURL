@@ -1,6 +1,8 @@
 package org.stir.shrinkurl.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +139,35 @@ public class UrlController {
         }
     }
     
+    /**
+     * Get paginated URLs for the dashboard
+     */
+    @GetMapping("/paginated")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getPaginatedUrls(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User user) {
+        
+        try {
+            List<Url> urls = urlService.getPaginatedUserUrls(user.getId(), page, size);
+            boolean hasMore = urlService.hasMoreUrls(user.getId(), page, size);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("urls", urls);
+            response.put("hasMore", hasMore);
+            response.put("page", page);
+            response.put("size", size);
+            response.put("totalUrls", urlService.getUserUrlCount(user.getId()));
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching paginated URLs", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to fetch URLs"));
+        }
+    }
+
     /**
      * Response DTOs
      */

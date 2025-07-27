@@ -3,6 +3,7 @@ package org.stir.shrinkurl.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,21 +55,45 @@ public class SubscriptionService {
     }
     
     
+    // Get subscription by ID
+    public Subscription getSubscriptionById(Long subscriptionId) {
+        return subscriptionRepository.findById(subscriptionId)
+            .orElse(null);
+    }
+    
     // Create pending subscription for upgrade
     public Subscription createPendingSubscription(User user, SubscriptionPlan plan) {
         if (plan == SubscriptionPlan.FREE) {
             throw new IllegalArgumentException("Cannot upgrade to FREE plan");
         }
         
-        Subscription pendingSubscription = Subscription.builder()
-            .user(user)
-            .plan(plan)
-            .status(SubscriptionStatus.PENDING)
-            .amount(BigDecimal.valueOf(plan.getPrice()))
-            .currency("USD")
-            .build();
+        // Get the current subscription
+        Subscription currentSubscription = subscriptionRepository.findActiveByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("User does not have an active subscription"));
         
-        return subscriptionRepository.save(pendingSubscription);
+        // Update current subscription to pending upgrade status
+        currentSubscription.setPlan(plan);
+        currentSubscription.setStatus(SubscriptionStatus.PENDING);
+        currentSubscription.setAmount(BigDecimal.valueOf(plan.getPrice()));
+        currentSubscription.setCurrency("USD");
+        currentSubscription.setAutoRenew(true);
+        
+        // Save the updated subscription
+        return subscriptionRepository.save(currentSubscription);
+    }
+    
+    // Helper method to calculate end date based on plan
+    private LocalDateTime calculateEndDateForPlan(LocalDateTime startDate, SubscriptionPlan plan) {
+        switch (plan) {
+            case MONTHLY:
+                return startDate.plusMonths(1);
+            case YEARLY:
+                return startDate.plusYears(1);
+            case LIFETIME:
+                return startDate.plusYears(100); // Effectively lifetime
+            default:
+                return startDate.plusYears(1); // Default to 1 year
+        }
     }
     
     // Activate subscription after payment
@@ -80,17 +105,11 @@ public class SubscriptionService {
             throw new IllegalStateException("Subscription is not in pending state");
         }
         
-        // Deactivate current subscription
-        subscriptionRepository.findActiveByUserId(subscription.getUser().getId())
-            .ifPresent(current -> {
-                current.setStatus(SubscriptionStatus.EXPIRED);
-                subscriptionRepository.save(current);
-            });
-        
-        // Activate new subscription
+        // Activate the subscription (no need to deactivate current since we're updating the same one)
+        LocalDateTime newStartDate = LocalDateTime.now();
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setStartDate(LocalDateTime.now());
-        subscription.calculateEndDate();
+        subscription.setStartDate(newStartDate);
+        subscription.setEndDate(calculateEndDateForPlan(newStartDate, subscription.getPlan()));
         subscription.setAutoRenew(true);
         
         return subscriptionRepository.save(subscription);
@@ -166,7 +185,7 @@ public class SubscriptionService {
         long clicksToday = getClicksToday(user);
         long clicksThisMonth = getClicksThisMonth(user);
         
-        return SubscriptionUsageDTO.builder()
+        SubscriptionUsageDTO usage = SubscriptionUsageDTO.builder()
             .userId(user.getId())
             .plan(plan)
             .urlsCreated(urlsCreated)
@@ -179,36 +198,23 @@ public class SubscriptionService {
             .clicksToday(clicksToday)
             .clicksThisMonth(clicksThisMonth)
             .build();
+        
+        // Calculate percentages
+        usage.calculatePercentages();
+        
+        return usage;
     }
     
     private int getUrlLimit(SubscriptionPlan plan) {
-        switch (plan) {
-            case FREE: return 10;
-            case MONTHLY: return 1000;
-            case YEARLY: return 10000;
-            case LIFETIME: return Integer.MAX_VALUE;
-            default: return 10;
-        }
+        return plan.getUrlLimit();
     }
     
     private int getApiCallLimit(SubscriptionPlan plan) {
-        switch (plan) {
-            case FREE: return 100;
-            case MONTHLY: return 10000;
-            case YEARLY: return 100000;
-            case LIFETIME: return Integer.MAX_VALUE;
-            default: return 100;
-        }
+        return plan.getApiCallLimit();
     }
     
     private long getStorageLimit(SubscriptionPlan plan) {
-        switch (plan) {
-            case FREE: return 100 * 1024 * 1024; // 100 MB
-            case MONTHLY: return 5L * 1024 * 1024 * 1024; // 5 GB
-            case YEARLY: return 50L * 1024 * 1024 * 1024; // 50 GB
-            case LIFETIME: return 1000L * 1024 * 1024 * 1024; // 1 TB
-            default: return 100 * 1024 * 1024;
-        }
+        return plan.getStorageLimit();
     }
     
     // These would need to be implemented based on your business logic
@@ -241,5 +247,100 @@ public class SubscriptionService {
             .stream()
             .mapToLong(UrlAnalytics::getClickCount)
             .sum();
+    }
+    
+    // Enhanced usage tracking methods
+    public boolean isFeatureAvailable(User user, String feature) {
+        SubscriptionPlan plan = user.getSubscriptionPlan();
+        
+        switch (feature.toLowerCase()) {
+            case "custom_short_codes":
+            case "custom_domains":
+            case "advanced_analytics":
+            case "priority_support":
+                return plan.isPremium();
+            case "unlimited_urls":
+                return plan.getUrlLimit() == Integer.MAX_VALUE;
+            case "unlimited_api":
+                return plan.getApiCallLimit() == Integer.MAX_VALUE;
+            case "unlimited_storage":
+                return plan.getStorageLimit() >= 1000L * 1024 * 1024 * 1024; // 1TB+
+            default:
+                return false;
+        }
+    }
+    
+    public List<String> getAvailableFeatures(User user) {
+        return user.getSubscriptionPlan().getFeatures();
+    }
+    
+    public List<String> getUpgradeFeatures(User user) {
+        SubscriptionPlan currentPlan = user.getSubscriptionPlan();
+        if (currentPlan == SubscriptionPlan.LIFETIME) {
+            return List.of(); // Already have everything
+        }
+        
+        SubscriptionPlan nextPlan = getNextPlan(currentPlan);
+        if (nextPlan == null) {
+            return List.of();
+        }
+        
+        return nextPlan.getFeatures();
+    }
+    
+    private SubscriptionPlan getNextPlan(SubscriptionPlan current) {
+        switch (current) {
+            case FREE: return SubscriptionPlan.MONTHLY;
+            case MONTHLY: return SubscriptionPlan.YEARLY;
+            case YEARLY: return SubscriptionPlan.LIFETIME;
+            default: return null;
+        }
+    }
+    
+    public boolean hasReachedLimit(User user, String limitType) {
+        SubscriptionUsageDTO usage = getUsageStats(user);
+        
+        switch (limitType.toLowerCase()) {
+            case "urls":
+                return usage.getUrlUsagePercentage() >= 100;
+            case "api":
+                return usage.getApiUsagePercentage() >= 100;
+            case "storage":
+                return usage.getStorageUsagePercentage() >= 100;
+            default:
+                return false;
+        }
+    }
+
+    public boolean canCreateUrl(User user) {
+        SubscriptionUsageDTO usage = getUsageStats(user);
+        return usage.getUrlsCreated() < usage.getUrlLimit();
+    }
+    
+    public boolean canMakeApiCall(User user) {
+        SubscriptionUsageDTO usage = getUsageStats(user);
+        return usage.getApiCallsToday() < usage.getApiCallLimit();
+    }
+    
+    public String getUpgradeMessage(User user) {
+        SubscriptionPlan current = user.getSubscriptionPlan();
+        SubscriptionUsageDTO usage = getUsageStats(user);
+        
+        if (current == SubscriptionPlan.FREE) {
+            if (usage.getUrlUsagePercentage() > 80) {
+                return "You're running out of URLs! Upgrade to get more capacity.";
+            }
+            return "Upgrade to premium for more features and higher limits.";
+        }
+        
+        if (current == SubscriptionPlan.MONTHLY) {
+            return "Save 17% with our yearly plan and get unlimited URL retention!";
+        }
+        
+        if (current == SubscriptionPlan.YEARLY) {
+            return "Go lifetime for unlimited access and no recurring payments!";
+        }
+        
+        return null;
     }
 }

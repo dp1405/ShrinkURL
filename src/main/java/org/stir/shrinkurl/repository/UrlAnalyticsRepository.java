@@ -25,7 +25,7 @@ public interface UrlAnalyticsRepository extends JpaRepository<UrlAnalytics, Long
     Long getTotalClicksByUrlId(@Param("urlId") Long urlId);
     
     // Get clicks for last N days
-    @Query("SELECT ua FROM UrlAnalytics ua WHERE ua.urlId = :urlId AND ua.clickDate >= :startDate ORDER BY ua.clickDate DESC")
+    @Query("SELECT ua FROM UrlAnalytics ua WHERE ua.urlId = :urlId AND ua.clickDate >= :startDate ORDER BY ua.clickDate ASC")
     List<UrlAnalytics> getClicksForLastNDays(@Param("urlId") Long urlId, @Param("startDate") LocalDate startDate);
     
     // Increment click count
